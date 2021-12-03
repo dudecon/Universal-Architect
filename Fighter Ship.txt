@@ -1,0 +1,61 @@
+#
+# generated in 88 iterations.
+*
+# Originally calculated from Specification.txt
+*Fighter Ship
+firepower 40.0
+# firepower generated 51.0
+# firepower consumed -11.0
+hab volume 51.0
+# hab volume generated 945.0
+# hab volume consumed -894.0
+volume 1.0
+# volume generated 9056.0
+# volume consumed -9055.0
+thrust 44.0
+# thrust generated 9100.0
+# thrust consumed -9056.0
+crew 97.53
+# crew generated 114.0
+# crew consumed -16.47
+life support 10.75
+# life support generated 192.0
+# life support consumed -181.25
+power 10.25
+# power generated 77.0
+# power consumed -66.75
+fuel 3.3799999999999955
+# fuel generated 40.5
+# fuel consumed -37.120000000000005
+structural integrity 694.0
+# structural integrity generated 10000.0
+# structural integrity consumed -9306.0
+engineer 3.0999999999999996
+# engineer generated 17.0
+# engineer consumed -13.9
+officer 0.5
+# officer generated 3.0
+# officer consumed -2.5
+emergency power 6.555
+# emergency power generated 45.0
+# emergency power consumed -38.445
+# All local nodes and resources are as follows:
+# firepower -7.0
+# Armory 1
+# Habitable Volume 945.0
+# Total Volume 9056.0
+# Structural Integrity Mesh 0.0
+# Little Engines 1.0
+# Crew Quarters 1.0
+# Life Support Capsule 12.0
+# Generators 1.0
+# Fuel Tanks 9.0
+# Structural Integrity Generator 5.0
+# Emergency Batteries 0.0
+# Engineering Quarters 4.0
+# Housing Block 1.0
+# Backup Generators 3.0
+# Big Engines 1.0
+# Bunk Room 2.0
+# Power Core 1.0
+# node results for Fighter Ship complete

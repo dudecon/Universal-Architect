@@ -1,0 +1,59 @@
+#
+# generated in 88 iterations.
+*
+# Originally calculated from Specification.txt
+*Bulk Freighter
+volume 76.0
+# volume generated 77634.0
+# volume consumed -77558.0
+structural integrity 366.0
+# structural integrity generated 80000.0
+# structural integrity consumed -79634.0
+thrust 2366.0
+# thrust generated 80000.0
+# thrust consumed -77634.0
+power 9.570000000000022
+# power generated 186.0
+# power consumed -176.42999999999998
+hab volume 1.0
+# hab volume generated 1603.0
+# hab volume consumed -1602.0
+emergency power 11.397000000000006
+# emergency power generated 135.0
+# emergency power consumed -123.603
+fuel 4.199999999999989
+# fuel generated 139.5
+# fuel consumed -135.3
+crew 100.57
+# crew generated 160.0
+# crew consumed -59.43
+life support 6.850000000000023
+# life support generated 292.0
+# life support consumed -285.15
+engineer 3.799999999999997
+# engineer generated 41.0
+# engineer consumed -37.2
+firepower 41.0
+# firepower generated 51.0
+# firepower consumed -10.0
+officer 0.5
+# officer generated 5.0
+# officer consumed -4.5
+# All local nodes and resources are as follows:
+# volume -50000.0
+# Total Volume 77634.0
+# Structural Integrity Generator 40.0
+# Big Engines 10.0
+# Power Core 3.0
+# Generators 0.0
+# Habitable Volume 1603.0
+# Backup Generators 9.0
+# Fuel Tanks 31.0
+# Bunk Room 8.0
+# Life Support Capsule 2.0
+# Engineering Quarters 10.0
+# Armory 1
+# Housing Block 1.0
+# Officer's Quarters 1.0
+# Arboraetum 1.0
+# node results for Bulk Freighter complete

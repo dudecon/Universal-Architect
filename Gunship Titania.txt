@@ -1,0 +1,63 @@
+#
+# generated in 88 iterations.
+*
+# Originally calculated from Specification.txt
+*Gunship Titania
+firepower 115.0
+# firepower generated 720.0
+# firepower consumed -605.0
+volume 1.0
+# volume generated 18484.0
+# volume consumed -18483.0
+structural integrity 1966.0
+# structural integrity generated 22000.0
+# structural integrity consumed -20034.0
+thrust 816.0
+# thrust generated 19300.0
+# thrust consumed -18484.0
+hab volume 1.0
+# hab volume generated 2193.0
+# hab volume consumed -2192.0
+power 25.870000000000005
+# power generated 186.0
+# power consumed -160.13
+crew 285.25
+# crew generated 320.0
+# crew consumed -34.75
+emergency power 9.307000000000002
+# emergency power generated 60.0
+# emergency power consumed -50.693
+fuel 2.3499999999999943
+# fuel generated 67.5
+# fuel consumed -65.15
+engineer 0.8000000000000007
+# engineer generated 23.0
+# engineer consumed -22.2
+officer 0.0
+# officer generated 11.0
+# officer consumed -11.0
+life support 57.35000000000002
+# life support generated 520.0
+# life support consumed -462.65
+# All local nodes and resources are as follows:
+# Bridge 1.0
+# firepower -600.0
+# Main Guns 5.0
+# Total Volume 18484.0
+# Structural Integrity Generator 11.0
+# Structural Integrity Mesh 0.0
+# Little Engines 3.0
+# Habitable Volume 2193.0
+# Power Core 3.0
+# Bunk Room 4.0
+# Crew Quarters 0.0
+# Life Support Capsule 0.0
+# Backup Generators 4.0
+# Emergency Batteries 0.0
+# Fuel Tanks 15.0
+# Big Engines 2.0
+# Engineering Quarters 5.0
+# Housing Block 3.0
+# Arboraetum 2.0
+# Officer's Quarters 1.0
+# node results for Gunship Titania complete

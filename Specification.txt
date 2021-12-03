@@ -1,0 +1,289 @@
+#
+# The first symbol is the comment symbol
+# anything after this symbol (in each line) 
+# will be passed over by the parser
+# I'm using the pound symbol (Like this #), but
+# you can use whatever you like (including multi-character identifiers)
+# so long as it's consistent thruought the file
+
+# empty lines are also ignored
+
+# the comment symbol is also used to delineate the gross
+# productionand consumption for resources,
+# and calculated contained nodes.
+# This allows you to see the internal contents that
+# get re-calculated every time you calculate the file
+
+# Finally is the new node symbol
+# This is how you tell the parser that you 
+# are starting a new node
+*
+# I'm using the star symbol, but again, you can use whatever you want.
+# and it can also be a multi-character identifier. Note that whitespace
+# is stripped off, but not out.
+# and that's the whole syntax! Everything else is whitespace delineated.
+
+# so, let's define a node
+
+*Gunship Titania
+# and then what is in the node. Quantity follows name
+Bridge -1
+firepower -600
+
+# that means the node
+# (the "Gunship Titania" in this example)
+# will contain one bridge and enough stuff
+# to support that, and produce 600 firepower
+# because "Bridge" is later defined as a node,
+# the solver will flatten the design and then
+# try to supply any deficiet resources.
+
+# note that, for non-solving nodes, a negative quantity of nodes
+# will actually invert the resource requirements.
+# but because of the way that solving nodes is indicated, and the normative
+# use-cases, the script simply inverts negative node quantities on solved nodes
+
+# note that nodes are selected by the one with the largest
+# supply value that does not cause an over-run.
+# There is no tie-breaking mechanism,
+# so don't put in nodes that supply the same quantity of resources.
+
+# If a name isn't defined as a node, the program will assume it's a resource,
+# and continue on. So be sure to check your results for typos!
+# I'm using capitalized names for nodes, and lowercase for resources
+# but the Universal Architect doesn't notice,
+# so you can use whatever naming scheme you like.
+
+# Here's a gathering node. The first line is your "new node" label
+* Total Volume
+# and each subsequent line tells what this node produces and requires
+volume 1
+structural integrity -1
+thrust -1
+# so, for every unit of volume, you'll need a structural integrity and a thrust
+
+# and so forth. Here's a habitable volume gathering node
+* Habitable Volume
+volume -1
+hab volume 1
+life support -0.05
+power -0.01
+emergency power -0.001
+# you can use floating point numbers as values as well
+
+* Power Core
+volume -2500
+power 62
+officer -1
+engineer -4
+crew -4
+fuel -10.0
+hab volume -100
+
+* Generators
+volume -800
+power 15.0
+officer -0.5
+engineer -2
+crew -2
+fuel -5.0
+hab volume -50
+
+* Backup Generators
+volume -600
+emergency power 15
+engineer -1
+crew -0.5
+fuel -5
+
+* Emergency Batteries
+volume -60
+emergency power 1
+crew -0.5
+life support -1
+
+
+# All of these nodes have been net resource nodes
+# but we could also write a few more specifications
+# how about a freighter?
+
+* Bulk Freighter
+volume -50000
+# so the bulk freighter will have
+# a net volume of at least 50000
+# but may have a gross volume much larger than that!
+
+
+# Let's add a little fighter too
+* Fighter Ship
+firepower -7
+
+* Big Engines
+volume -500
+emergency power -3
+crew -1
+engineer -1
+
+thrust 8000
+structural integrity -200
+fuel -6
+
+* Little Engines
+volume -100
+power -2
+emergency power -0.5
+crew -0.2
+engineer -0.2
+
+thrust 1100
+structural integrity -50
+fuel -1
+
+* Fuel Tanks
+volume -230
+fuel 4.5
+crew -0.03
+
+* Bunk Room
+hab volume -55
+life support -8
+crew 8
+power -1
+
+* Crew Quarters
+hab volume -12
+life support -2
+crew 2
+power -0.1
+
+* Engineering Quarters
+hab volume -38
+life support -4
+engineer 4
+power -1
+firepower -1
+# they are always tinkering with weapons in their spare time
+fuel -0.03
+
+* Officer's Quarters
+hab volume -12
+life support -1
+officer 2
+power -0.2
+
+* Housing Block
+hab volume -450
+life support -100
+crew 96
+engineer 1
+officer 3
+power -10
+
+* Armory
+hab volume -20
+power -0.2
+officer -1
+crew -4
+engineer -2
+firepower 51
+
+* Main Guns
+volume -250
+hab volume -20
+structural integrity -200
+
+firepower 144
+power -8
+crew -2
+engineer -0.5
+officer -0.2
+
+
+* Structural Integrity Generator
+volume -20
+power -3
+emergency power -2
+crew -0.7
+engineer -0.1
+structural integrity 2000
+
+
+* Structural Integrity Mesh
+volume -4
+structural integrity 180
+
+
+* Life Support Capsule
+volume -20
+life support 16
+power -2
+engineer -0.1
+emergency power -2
+
+* Arboraetum
+volume -85
+life support 260
+power -8
+officer -0.5
+emergency power -8
+
+* Bridge
+hab volume -20
+officer -6
+power -4
+emergency power -3
+don't solve this 0
+
+# you can also put nodes in that have nothing
+# to do with the rest of the nodes
+# when the solved nodes are processed,
+# only the required nodes will be included in the output
+
+# so, here's a potted plant. I don't think it's going to be used, but it's here
+
+* Potted Plant
+petals 5
+odur 1
+Pot -1
+Soil -0.21
+
+# also, I've used an extra new-line above to keep things
+# readable, but it's not required (as below).
+# it is newline delineated though.
+# so, * joke node doesn't generate a new node
+# becuase the line is already flagged as a comment
+
+# tests for proper handling of empty nodes
+* Pot
+* Soil
+# test for an unnamed node
+*   
+nothing 50
+something 0
+*
+these resources will not show up 500
+because the node has no name! -45
+so they get thrown out 0
+*
+
+# and that's it! The program will crunch the numbers.
+# All processed nodes will have nodes added to them until they have
+# net-non-negative resource balance.
+# How does it know which nodes to process?
+# All nodes which only consume will be processed.
+# That is, every node with negative values for all
+# resources and child nodes.
+
+# If you want a resource sink that you don't want solved
+# put a dummy resource with a zero value in, like so
+* Sink Node
+don't solve this 0
+consume me -3
+and me -15
+and also me -80
+# it will still get included in the list of nodes,
+# but it won't go on the list of nodes to solve.
+
+# This example specification file is meant for operation with
+# the Universal Architect calculator V 0.1
+# Released to the Public Domain by Paul Spooner
