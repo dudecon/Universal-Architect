@@ -9,7 +9,7 @@
 # empty lines are also ignored
 
 # the comment symbol is also used to delineate the gross
-# productionand consumption for resources,
+# production and consumption for resources,
 # and calculated contained nodes.
 # This allows you to see the internal contents that
 # get re-calculated every time you calculate the file
