@@ -1,0 +1,475 @@
+# res://core/UniversalArchitect.gd
+class_name UniversalArchitect
+extends RefCounted
+
+# Universal Architect - Quantum-Driven Constraint Solver
+# Ported from Paul Spooner's Universal Architect system
+# Integrated with SpaceWheat quantum computer and Godot GraphNode system
+
+signal solution_found(node_name: String, solution: Dictionary)
+signal solving_failed(node_name: String, error: String)
+signal iteration_complete(iteration: int, nodes_remaining: int)
+
+# Core data structures
+var all_nodes: Dictionary = {}  # node_name -> UANode
+var solve_node_names: Array[String] = []
+var nested_node_names: Array[String] = []
+var static_node_names: Array[String] = []
+var all_resources: Dictionary = {}  # resource -> Array[[qty, node_name]]
+var productions: Dictionary = {}  # resource -> Array[[qty, node_name]] (positive only)
+
+# Solver configuration
+var margin: float = 1.25
+var max_loops: int = 105
+var debug_mode: bool = false
+var verbose: bool = false
+
+# Quantum integration
+var quantum_conductor: Node  # Reference to quantum system
+var graph_edit: GraphEdit  # Reference to active GraphEdit system
+
+# Node definition class
+class UANode:
+	var name: String
+	var local_items: Dictionary = {}  # resource/node -> quantity
+	var net_resources: Dictionary = {}  # calculated net production/consumption
+	var child_production: Dictionary = {}  # gross production from children
+	var child_consumption: Dictionary = {}  # gross consumption from children
+	var contains_nodes: bool = false
+	var solve_set: Array = []  # [net_value, resource, solution_nodes]
+	var quantum_driven: bool = false  # If true, gets updated from quantum state
+	var graph_node_id: String = ""  # GraphEdit node ID if applicable
+	
+	func _init(node_name: String = ""):
+		name = node_name
+
+# Core API for quantum integration
+func setup_quantum_integration(conductor: Node, graph: GraphEdit = null):
+	"""Initialize quantum computer and GraphEdit integration"""
+	quantum_conductor = conductor
+	graph_edit = graph
+	
+	if quantum_conductor:
+		# Connect to quantum state changes
+		if quantum_conductor.has_signal("state_evolved"):
+			quantum_conductor.state_evolved.connect(_on_quantum_state_changed)
+	
+	if graph_edit:
+		# Connect to GraphEdit changes
+		graph_edit.connection_request.connect(_on_graph_connection_request)
+		graph_edit.disconnection_request.connect(_on_graph_disconnection_request)
+
+func create_quantum_driven_node(node_name: String, quantum_vector_index: int = -1) -> UANode:
+	"""Create a node that updates from quantum state"""
+	var node = UANode.new(node_name)
+	node.quantum_driven = true
+	if quantum_vector_index >= 0:
+		node.local_items["quantum_vector_index"] = quantum_vector_index
+	all_nodes[node_name] = node
+	return node
+
+func create_static_node(node_name: String, resources: Dictionary) -> UANode:
+	"""Create a static production/consumption node"""
+	var node = UANode.new(node_name)
+	node.local_items = resources.duplicate()
+	all_nodes[node_name] = node
+	_categorize_node(node_name)
+	return node
+
+func create_solve_node(node_name: String, requirements: Dictionary) -> UANode:
+	"""Create a node that UA will solve requirements for"""
+	var node = UANode.new(node_name)
+	# Convert requirements to negative values (UA convention)
+	for resource in requirements:
+		node.local_items[resource] = -abs(requirements[resource])
+	all_nodes[node_name] = node
+	_categorize_node(node_name)
+	return node
+
+func add_resource_to_node(node_name: String, resource: String, quantity: float):
+	"""Add or modify a resource in a node"""
+	if node_name not in all_nodes:
+		push_error("Node %s does not exist" % node_name)
+		return
+	
+	var node = all_nodes[node_name]
+	node.local_items[resource] = quantity
+	_recategorize_node(node_name)
+
+# Quantum state integration
+func _on_quantum_state_changed(quantum_state: PackedVector2Array):
+	"""Update quantum-driven nodes when quantum state changes"""
+	var needs_resolving = false
+	
+	for node_name in all_nodes:
+		var node = all_nodes[node_name]
+		if not node.quantum_driven:
+			continue
+		
+		var vector_index = node.local_items.get("quantum_vector_index", -1)
+		if vector_index >= 0 and vector_index < quantum_state.size():
+			var quantum_vector = quantum_state[vector_index]
+			_update_node_from_quantum(node, quantum_vector)
+			needs_resolving = true
+	
+	if needs_resolving:
+		solve_all_nodes()
+
+func _update_node_from_quantum(node: UANode, quantum_vector: Vector2):
+	"""Update node resources based on quantum state"""
+	var magnitude = quantum_vector.length()
+	var phase = quantum_vector.angle()
+	
+	# Example quantum-driven resource generation
+	# These would be customized based on your specific needs
+	node.local_items["quantum_energy"] = magnitude * 10.0
+	node.local_items["quantum_phase"] = phase
+	node.local_items["rendering_complexity"] = magnitude * 0.5
+	node.local_items["animation_intensity"] = abs(sin(phase)) * magnitude
+
+# GraphEdit integration
+func _on_graph_connection_request(from_node: String, from_port: int, to_node: String, to_port: int):
+	"""Handle GraphEdit connection requests"""
+	if graph_edit:
+		graph_edit.connect_node(from_node, from_port, to_node, to_port)
+	
+	# Update UA relationships based on graph connections
+	_update_ua_from_graph_connection(from_node, to_node)
+
+func _on_graph_disconnection_request(from_node: String, from_port: int, to_node: String, to_port: int):
+	"""Handle GraphEdit disconnection requests"""
+	if graph_edit:
+		graph_edit.disconnect_node(from_node, from_port, to_node, to_port)
+	
+	# Update UA relationships
+	_update_ua_from_graph_disconnection(from_node, to_node)
+
+func _update_ua_from_graph_connection(from_node: String, to_node: String):
+	"""Update UA node relationships based on graph connections"""
+	# This would implement the logic to convert GraphEdit connections
+	# into UA resource dependencies
+	pass
+
+func _update_ua_from_graph_disconnection(from_node: String, to_node: String):
+	"""Update UA node relationships based on graph disconnections"""
+	# Implementation for disconnection handling
+	pass
+
+# Core UA solver algorithm (ported from Python)
+func solve_all_nodes() -> bool:
+	"""Solve all nodes that need solving"""
+	_update_all_nested_nodes()
+	
+	var iterations = 0
+	var nodes_to_update = solve_node_names.duplicate()
+	
+	while nodes_to_update.size() > 0 and iterations < max_loops:
+		if debug_mode:
+			print("Solver iteration %d, nodes remaining: %d" % [iterations, nodes_to_update.size()])
+		
+		nodes_to_update = _solve_iteration(nodes_to_update)
+		iterations += 1
+		iteration_complete.emit(iterations, nodes_to_update.size())
+	
+	if nodes_to_update.size() > 0:
+		var error_msg = "Solver failed to converge after %d iterations" % max_loops
+		for node_name in nodes_to_update:
+			solving_failed.emit(node_name, error_msg)
+		return false
+	
+	# Emit solutions for all solved nodes
+	for node_name in solve_node_names:
+		var solution = _extract_solution(node_name)
+		solution_found.emit(node_name, solution)
+	
+	return true
+
+func _solve_iteration(nodes_to_update: Array[String]) -> Array[String]:
+	"""Single iteration of the solver"""
+	# Update nested node relationships
+	var recurse_nodes = nodes_to_update.duplicate()
+	while recurse_nodes.size() > 0:
+		recurse_nodes = _nested_node_update(recurse_nodes)
+	
+	var next_nodes_to_update: Array[String] = []
+	
+	for solve_node_name in nodes_to_update:
+		var solve_node = all_nodes[solve_node_name]
+		var needs_more_solving = _solve_node_deficits(solve_node)
+		if needs_more_solving:
+			next_nodes_to_update.append(solve_node_name)
+	
+	return next_nodes_to_update
+
+func _solve_node_deficits(solve_node: UANode) -> bool:
+	"""Solve resource deficits for a single node"""
+	var net_result = solve_node.net_resources
+	var local_nodes = solve_node.local_items
+	var current_solution_list = solve_node.solve_set
+	
+	# Update deficit tracking
+	for resource in net_result:
+		var qty = net_result[resource]
+		if qty >= 0:
+			continue  # No deficit
+		
+		# Find or create solution entry
+		var solution_entry = null
+		for entry in current_solution_list:
+			if entry[1] == resource:
+				solution_entry = entry
+				break
+		
+		if solution_entry == null:
+			solution_entry = [qty, resource, {}]
+			current_solution_list.append(solution_entry)
+		else:
+			solution_entry[0] = qty
+	
+	# Sort by deficit size (largest first)
+	current_solution_list.sort_custom(func(a, b): return a[0] < b[0])
+	
+	if current_solution_list.size() == 0:
+		return false  # No deficits to solve
+	
+	# Solve the largest deficit
+	var solution_data = current_solution_list[0]
+	var resource = solution_data[1]
+	var nodes_to_try = solution_data[2]
+	
+	# Reset current solution
+	for node_name in nodes_to_try:
+		var node_qty = nodes_to_try[node_name]
+		local_nodes[node_name] = local_nodes.get(node_name, 0) - node_qty
+	
+	nodes_to_try.clear()
+	
+	# Recalculate gross values
+	_calc_gross(solve_node)
+	
+	# Find production to satisfy deficit
+	var gross_production = solve_node.child_production.get(resource, 0)
+	var gross_consumption = solve_node.child_consumption.get(resource, 0)
+	var min_production = -gross_consumption
+	var upper_production = min_production * margin
+	
+	if resource not in productions:
+		return true  # Can't solve this deficit
+	
+	var available_sources = productions[resource]
+	var this_pass_production = gross_production
+	
+	for candidate_data in available_sources:
+		var candidate_production = candidate_data[0]
+		var candidate_node = candidate_data[1]
+		
+		var current_net = min_production - this_pass_production
+		var needed = 1 + int(current_net / candidate_production)
+		
+		var production_check = candidate_production * needed + this_pass_production
+		if production_check > upper_production:
+			needed -= 1
+		
+		if needed <= 0:
+			continue
+		
+		this_pass_production += candidate_production * needed
+		nodes_to_try[candidate_node] = nodes_to_try.get(candidate_node, 0) + needed
+		
+		if this_pass_production >= min_production:
+			break
+	
+	# Commit solution
+	for node_name in nodes_to_try:
+		var node_qty = nodes_to_try[node_name]
+		local_nodes[node_name] = local_nodes.get(node_name, 0) + node_qty
+	
+	solution_data[2] = nodes_to_try
+	
+	return true
+
+# Helper functions
+func _categorize_node(node_name: String):
+	"""Categorize node as solve, nested, or static"""
+	var node = all_nodes[node_name]
+	
+	# Check if node should be solved (all negative values)
+	var should_solve = true
+	for value in node.local_items.values():
+		if value >= 0:
+			should_solve = false
+			break
+	
+	if should_solve:
+		solve_node_names.append(node_name)
+		_init_has_nodes(node_name)
+	elif _node_contains_other_nodes(node_name):
+		_init_has_nodes(node_name)
+	else:
+		static_node_names.append(node_name)
+		node.net_resources = node.local_items.duplicate()
+		_add_resources(node_name)
+
+func _recategorize_node(node_name: String):
+	"""Recategorize node after modification"""
+	# Remove from existing categories
+	solve_node_names.erase(node_name)
+	nested_node_names.erase(node_name)
+	static_node_names.erase(node_name)
+	
+	_categorize_node(node_name)
+
+func _node_contains_other_nodes(node_name: String) -> bool:
+	"""Check if node contains references to other nodes"""
+	var node = all_nodes[node_name]
+	for item in node.local_items:
+		if item in all_nodes:
+			return true
+	return false
+
+func _init_has_nodes(node_name: String):
+	"""Initialize node that contains other nodes"""
+	var node = all_nodes[node_name]
+	node.contains_nodes = true
+	node.child_production = {}
+	node.child_consumption = {}
+	if node_name not in nested_node_names:
+		nested_node_names.append(node_name)
+
+func _calc_gross(node: UANode):
+	"""Calculate gross production/consumption from contained nodes"""
+	if not node.contains_nodes:
+		return
+	
+	node.child_production.clear()
+	node.child_consumption.clear()
+	
+	for item in node.local_items:
+		var other_node_qty = node.local_items[item]
+		if item not in all_nodes:
+			_gross_entry(other_node_qty, item, node)
+			continue
+		
+		var other_node = all_nodes[item]
+		var other_node_net = other_node.net_resources
+		
+		for resource_key in other_node_net:
+			var resource_value = other_node_net[resource_key] * other_node_qty
+			_gross_entry(resource_value, resource_key, node)
+
+func _gross_entry(qty: float, item: String, node: UANode):
+	"""Add gross production/consumption entry"""
+	if qty > 0:
+		node.child_production[item] = node.child_production.get(item, 0) + qty
+	elif qty < 0:
+		node.child_consumption[item] = node.child_consumption.get(item, 0) + qty
+
+func _calc_net(node: UANode):
+	"""Calculate net resources from gross values"""
+	node.net_resources.clear()
+	
+	for resource in node.child_production:
+		var qty = node.child_production[resource]
+		node.net_resources[resource] = node.net_resources.get(resource, 0) + qty
+	
+	for resource in node.child_consumption:
+		var qty = node.child_consumption[resource]
+		node.net_resources[resource] = node.net_resources.get(resource, 0) + qty
+
+func _add_resources(node_name: String):
+	"""Add node's resources to global resource tracking"""
+	var node = all_nodes[node_name]
+	for resource in node.net_resources:
+		var qty = node.net_resources[resource]
+		
+		if resource not in all_resources:
+			all_resources[resource] = []
+		
+		all_resources[resource].append([qty, node_name])
+		all_resources[resource].sort()
+		
+		if qty > 0:
+			if resource not in productions:
+				productions[resource] = []
+			productions[resource].append([qty, node_name])
+			productions[resource].sort_custom(func(a, b): return a[0] > b[0])
+
+func _remove_resources(node_name: String):
+	"""Remove node's resources from global tracking"""
+	var node = all_nodes[node_name]
+	for resource in node.net_resources:
+		var qty = node.net_resources[resource]
+		
+		if resource in all_resources:
+			all_resources[resource].erase([qty, node_name])
+		
+		if qty > 0 and resource in productions:
+			productions[resource].erase([qty, node_name])
+
+func _nested_node_update(nodes_to_update: Array[String]) -> Array[String]:
+	"""Update nested nodes and return nodes that need further updates"""
+	for node_name in nodes_to_update:
+		var node = all_nodes[node_name]
+		if node_name not in solve_node_names:
+			_remove_resources(node_name)
+		_calc_gross(node)
+		_calc_net(node)
+		if node_name not in solve_node_names:
+			_add_resources(node_name)
+	
+	var nodes_updated_last_time = nodes_to_update.duplicate()
+	var next_nodes_to_update: Array[String] = []
+	
+	for node_name in nested_node_names:
+		var node = all_nodes[node_name]
+		for item in node.local_items:
+			if item in nodes_updated_last_time and node_name not in next_nodes_to_update:
+				next_nodes_to_update.append(node_name)
+	
+	return next_nodes_to_update
+
+func _update_all_nested_nodes():
+	"""Update all nested nodes until stable"""
+	var nodes_to_update = nested_node_names.duplicate()
+	var max_cycles = nested_node_names.size()
+	var cycle_count = 0
+	
+	while nodes_to_update.size() > 0 and cycle_count < max_cycles:
+		nodes_to_update = _nested_node_update(nodes_to_update)
+		cycle_count += 1
+	
+	if cycle_count >= max_cycles:
+		push_error("Cycle detected in nested node dependencies")
+
+func _extract_solution(node_name: String) -> Dictionary:
+	"""Extract solution data for a solved node"""
+	var node = all_nodes[node_name]
+	return {
+		"node_name": node_name,
+		"net_resources": node.net_resources.duplicate(),
+		"local_items": node.local_items.duplicate(),
+		"solve_set": node.solve_set.duplicate()
+	}
+
+# Utility functions for external access
+func get_node_solution(node_name: String) -> Dictionary:
+	"""Get the current solution for a node"""
+	if node_name not in all_nodes:
+		return {}
+	return _extract_solution(node_name)
+
+func get_all_solutions() -> Dictionary:
+	"""Get solutions for all nodes"""
+	var solutions = {}
+	for node_name in all_nodes:
+		solutions[node_name] = _extract_solution(node_name)
+	return solutions
+
+func clear_all_nodes():
+	"""Clear all data and reset the solver"""
+	all_nodes.clear()
+	solve_node_names.clear()
+	nested_node_names.clear()
+	static_node_names.clear()
+	all_resources.clear()
+	productions.clear()
