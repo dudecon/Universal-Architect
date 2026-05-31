@@ -1,61 +1,54 @@
 #
-# generated in 88 iterations.
+# generated in 40 iterations.
 *
 # Originally calculated from Specification.txt
 *Fighter Ship
-firepower 40.0
-# firepower generated 51.0
-# firepower consumed -11.0
-hab volume 51.0
-# hab volume generated 945.0
-# hab volume consumed -894.0
-volume 1.0
-# volume generated 9056.0
-# volume consumed -9055.0
-thrust 44.0
-# thrust generated 9100.0
-# thrust consumed -9056.0
-crew 97.53
-# crew generated 114.0
-# crew consumed -16.47
-life support 10.75
-# life support generated 192.0
-# life support consumed -181.25
-power 10.25
-# power generated 77.0
-# power consumed -66.75
-fuel 3.3799999999999955
-# fuel generated 40.5
-# fuel consumed -37.120000000000005
-structural integrity 694.0
-# structural integrity generated 10000.0
-# structural integrity consumed -9306.0
-engineer 3.0999999999999996
-# engineer generated 17.0
-# engineer consumed -13.9
-officer 0.5
-# officer generated 3.0
-# officer consumed -2.5
-emergency power 6.555
-# emergency power generated 45.0
-# emergency power consumed -38.445
+thrust 1724
+# thrust generated 8000
+# thrust consumed -6276
+structural integrity 1324
+# structural integrity generated 8000
+# structural integrity consumed -6676
+life support 224.95
+# life support generated 260
+# life support consumed -35.05
+firepower 135
+# firepower generated 144
+# firepower consumed -9
+power 28.39
+# power generated 62
+# power consumed -33.61
+emergency power 10.719
+# emergency power generated 30
+# emergency power consumed -19.281
+crew 1.02
+# crew generated 12
+# crew consumed -10.98
+hab volume 1
+# hab volume generated 281
+# hab volume consumed -280
+fuel 0.94
+# fuel generated 27
+# fuel consumed -26.06
+officer 0.3
+# officer generated 2
+# officer consumed -1.7
+engineer 0.1
+# engineer generated 8
+# engineer consumed -7.9
 # All local nodes and resources are as follows:
-# firepower -7.0
-# Armory 1
-# Habitable Volume 945.0
-# Total Volume 9056.0
-# Structural Integrity Mesh 0.0
-# Little Engines 1.0
-# Crew Quarters 1.0
-# Life Support Capsule 12.0
-# Generators 1.0
-# Fuel Tanks 9.0
-# Structural Integrity Generator 5.0
-# Emergency Batteries 0.0
-# Engineering Quarters 4.0
-# Housing Block 1.0
-# Backup Generators 3.0
-# Big Engines 1.0
-# Bunk Room 2.0
-# Power Core 1.0
+# Arboraetum 1
+# Backup Generators 2
+# Big Engines 1
+# Crew Quarters 6
+# Engineering Quarters 2
+# Fuel Tanks 6
+# Habitable Volume 281
+# Main Guns 1
+# Officer's Quarters 1
+# Power Core 1
+# Structural Integrity Generator 4
+# Total Volume 6276
+# firepower -7
 # node results for Fighter Ship complete
+# total minimized cost: 17.33 (from 5 terms)

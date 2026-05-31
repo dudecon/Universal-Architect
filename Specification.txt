@@ -287,3 +287,30 @@ and also me -80
 # This example specification file is meant for operation with
 # the Universal Architect calculator V 0.1
 # Released to the Public Domain by Paul Spooner
+
+
+#
+# Cost minimization (added in v0.3+)
+#
+# You can tell the solver to prefer "cheaper" designs instead of just any
+# valid one. There are two convenient ways:
+
+# 1. Define a cost model node inside the spec (recommended for complex cases)
+* Cost
+volume 2
+crew 8
+engineer 12
+officer 25
+fuel 0.5
+# Then run:  python ua_calc.py Specification.txt --minimize Cost
+
+# 2. Quick and dirty on the command line:
+#    python ua_calc.py Specification.txt --minimize "volume 1 crew 8 officer 25"
+
+# When --minimize is used the solver does two things:
+#   - During search it prefers suppliers that give good production per unit of cost.
+#   - After finding a working design, it runs a reduction pass trying to remove
+#     the most expensive components while keeping all resources non-negative.
+#
+# The final output files will include a line with the total minimized cost.
+# This feature requires no external packages.
